@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Resources:
+
+  PrimeBurgersFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: handler.primeBurgers
+      Runtime: nodejs14.x
+      CodeUri: .   
+  
+  PrimeBurgersInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref PrimeBurgersFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt MyEventsRule.Arn
+
+  MyEventsRule:
+    Type: 'AWS::Events::Rule'
+    Properties:
+      Description: "Order to PrimeBurgers"
+      EventPattern: 
+        source:
+          - custom.orderManager
+        detail-type:
+          - order                
+        detail:
+          restaurantName:
+            - "primeBurgers"
+      Targets:
+        - Arn: !GetAtt PrimeBurgersFunction.Arn
+          Id: "RuleId"
